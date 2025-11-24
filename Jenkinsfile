@@ -1,22 +1,24 @@
 pipeline {
     agent any
 
-    environment {
-        NODE_HOME = tool name: 'NodeJS', type: 'NodeJSInstallation' 
-        PATH = "${env.NODE_HOME}/bin:${env.PATH}"
+    tools {
+        nodejs "NodeJS"   
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 git branch: 'main',
                     url: 'git@github.com:viqa123/Tests.git',
-                    credentialsId: 'github-ssh'  
+                    credentialsId: 'github-ssh'
             }
         }
 
         stage('Install Dependencies') {
             steps {
+                sh 'node -v'          
+                sh 'npm -v'
                 sh 'npm install'
                 sh 'npx playwright install'
             }
@@ -31,7 +33,7 @@ pipeline {
         stage('Archive Reports') {
             steps {
                 archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
-                junit 'playwright-report/**/*.xml'  
+                junit 'playwright-report/**/*.xml'
             }
         }
     }
