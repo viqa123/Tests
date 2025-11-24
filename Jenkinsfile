@@ -1,12 +1,12 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs "NodeJS"   
+    environment {
+        NODE_HOME = tool name: 'NodeJS', type: 'NodeJSInstallation'
+        PATH = "${env.NODE_HOME}/bin:${env.PATH}"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -17,8 +17,6 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'node -v'          
-                sh 'npm -v'
                 sh 'npm install'
                 sh 'npx playwright install'
             }
