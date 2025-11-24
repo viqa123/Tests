@@ -1,41 +1,30 @@
 pipeline {
     agent any
 
-    environment {
-    
-        NODE_HOME = tool name: 'NodeJS 22.18.0', type: 'NodeJSInstallation'
-        PATH = "${env.NODE_HOME}/bin:${env.PATH}"
+   
+    tools {
+        nodejs 'NodeJS'   
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'git@github.com:viqa123/Tests.git',
-                    credentialsId: 'github-ssh'
+                checkout scm  
             }
         }
 
-        stage('Check Node') {
+        stage('Check Node & NPM') {
             steps {
-                echo "Checking NodeJS and NPM versions"
                 sh 'node -v'
                 sh 'npm -v'
+                sh 'npx -v'
             }
         }
-
-        stage('Check Node on Master') {
-    steps {
-        sh 'which node || echo "NodeJS not found"'
-        sh 'node -v || echo "NodeJS not found"'
-        sh 'npm -v || echo "NPM not found"'
-             }
-       }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
-                sh 'npx playwright install'
+                sh 'npm ci'  
+                sh 'npx playwright install --with-deps'  
             }
         }
 
@@ -44,21 +33,19 @@ pipeline {
                 sh 'npx playwright test'
             }
         }
-
-        stage('Archive Reports') {
-            steps {
-                archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
-                junit 'playwright-report/**/*.xml'
-            }
-        }
     }
 
     post {
+        always {
+           
+            archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+            junit testResults: 'playwright-report/junit-results.xml', allowEmptyResults: true
+        }
         success {
-            echo 'Build and tests succeeded!'
+            echo 'Всё прошло успешно!'
         }
         failure {
-            echo 'Build or tests failed!'
+            echo 'Тесты или сборка упали'
         }
     }
 }
